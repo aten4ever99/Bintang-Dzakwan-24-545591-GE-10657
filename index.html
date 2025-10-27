@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Kabupaten Kudus</title>
+
+<!-- Hanya menggunakan Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+/* ====== GAYA UTAMA HALAMAN ====== */
+body {
+    margin: 0;
+    font-family: "Segoe UI", sans-serif;
+    background-image: url('background.png'); /* gambar latar belakang */
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    position: relative;
+}
+
+/* Lapisan transparan di atas background agar teks tetap terbaca */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(30, 58, 138, 0.25);
+    z-index: 0;
+}
+
+/* Setiap halaman (peta dan data) */
+.page {
+    display: none;
+    min-height: 100vh;
+    background-color: rgba(219, 232, 236, 0.84);
+    animation: fadeIn 1s ease;
+    position: relative;
+    z-index: 1;
+}
+.active { display: block; }
+
+@keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+
+/* ====== HEADER ====== */
+header {
+    background-color: rgba(30, 58, 138, 0.93);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 12px;
+    padding: 15px 25px;
+    margin: 0 auto 15px auto;
+    width: 90%;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    border-bottom: 4px solid #bfdbfe;
+}
+.header-left img { height: 80px; }
+.header-right img { height: 90px; }
+.header-center {
+    flex: 1;
+    text-align: center;
+}
+.header-center h1 {
+    margin: 0;
+    font-size: 30px;
+    font-weight: bold;
+}
+.header-center p {
+    margin: 6px 0 0 0;
+    font-size: 15px;
+    line-height: 1.4;
+}
+
+/* ====== GAMBAR PETA ====== */
+#map-container {
+    display: flex;
+    justify-content: center;
+    margin: 25px auto;
+}
+#map-image {
+    width: 55%;
+    max-width: 700px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    transition: transform 0.3s ease;
+    z-index: 2;
+    position: relative;
+}
+#map-image:hover {
+    transform: scale(1.02);
+}
+
+/* Ukuran peta responsif */
+@media (max-width: 992px) {
+    #map-image { width: 70%; max-width: 600px; }
+}
+@media (max-width: 600px) {
+    #map-image { width: 90%; max-width: 500px; }
+}
+
+/* ====== TOMBOL ====== */
+button {
+    background-color: #1e3a8a;
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    font-size: 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 15px;
+}
+button:hover {
+    background-color: #1d4ed8;
+}
+
+/* ====== TABEL ====== */
+table {
+    width: 85%;
+    margin: 25px auto;
+    border-collapse: collapse;
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 12px;
+    overflow: hidden;
+    font-size: 17px;
+}
+th {
+    background: #1e40af;
+    color: white;
+    padding: 12px;
+}
+td {
+    background: #f0f9ff;
+    padding: 10px;
+    text-align: center;
+}
+tr:nth-child(even) td {
+    background: #dbeafe;
+}
+tr:hover td {
+    background: #bfdbfe;
+}
+
+/* ====== GRAFIK ====== */
+.chart-container {
+    width: 85%;
+    margin: 40px auto;
+}
+
+/* ====== FOOTER ====== */
+footer {
+    background-color: rgba(30, 58, 138, 0.92);
+    color: white;
+    text-align: center;
+    padding: 12px;
+    font-size: 18px;
+    margin-top: 35px;
+}
+</style>
+
+<script>
+/* Fungsi untuk menampilkan halaman tertentu */
+function showPage(page) {
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    document.getElementById(page).classList.add("active");
+
+    if (page === "dataPage") createCharts();
+}
+
+let chart2;
+/* Membuat grafik Chart.js */
+function createCharts() {
+    const ctx2 = document.getElementById('chartGender');
+    if (chart2) chart2.destroy();
+
+    const labels = ["Kaliwungu", "Kota Kudus", "Jati", "Undaan", "Mejobo", "Jekulo", "Bae", "Gebog", "Dawe"];
+    const male = [54663, 43627, 56297, 40081, 40643, 56448, 38564, 54503, 55629];
+    const female = [54101, 46148, 56746, 39910, 40252, 56684, 38751, 54496, 55779];
+    const total = male.map((m, i) => m + female[i]);
+
+    chart2 = new Chart(ctx2, {
+        type: 'bar',
+        data: { 
+            labels, 
+            datasets: [
+                { label: "Laki-laki", data: male, backgroundColor: "#2563eb" },
+                { label: "Perempuan", data: female, backgroundColor: "#60a5fa" },
+                { label: "Total", data: total, backgroundColor: "#93c5fd" }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Perbandingan Jumlah Penduduk (2024)',
+                    color: '#1e3a8a',
+                    font: { size: 18, weight: 'bold' }
+                }
+            },
+            scales: {
+                x: { ticks: { color: '#1e3a8a', font: { weight: 'bold' } } },
+                y: { ticks: { color: '#1e3a8a' }, grid: { color: '#e0e7ff' } }
+            },
+            animation: { duration: 1200, easing: 'easeOutBounce' }
+        }
+    });
+}
+</script>
+</head>
+
+<body>
+
+<!-- ================= HALAMAN 1: GAMBAR PETA ================= -->
+<div id="mapPage" class="page active">
+    <header>
+        <div class="header-left">
+            <img src="Lambang_Kabupaten_Kudus.png" alt="Lambang Kabupaten Kudus">
+        </div>
+        <div class="header-center">
+            <h1>Kabupaten Kudus</h1>
+            <p>
+                Kabupaten Kudus dikenal sebagai Kota Kretek dan merupakan salah satu pusat sejarah serta kebudayaan di Jawa Tengah. 
+                Wilayah ini terkenal dengan <i>Menara Kudus</i>, peninggalan bersejarah bercorak Islam dan Hindu yang menjadi simbol toleransi budaya. 
+                Secara administratif, Kabupaten Kudus terbagi menjadi sembilan kecamatan dengan tingkat kepadatan penduduk yang cukup tinggi.
+            </p>
+        </div>
+        <div class="header-right">
+            <img src="UGM.png" alt="Logo UGM">
+        </div>
+    </header>
+
+    <!-- Gambar Peta Kudus -->
+    <div id="map-container">
+        <img src="Screenshot 2025-10-27 140556.png" alt="Peta Kabupaten Kudus" id="map-image">
+    </div>
+
+    <center>
+        <button onclick="showPage('dataPage')">Lihat Data Penduduk</button>
+    </center>
+
+    <footer>
+        Bintang Dzakwan
+    </footer>
+</div>
+
+<!-- ================= HALAMAN 2: DATA & GRAFIK ================= -->
+<div id="dataPage" class="page">
+   <header>
+        <div class="header-left">
+            <img src="Lambang_Kabupaten_Kudus.png" alt="Lambang Kudus">
+        </div>
+        <div class="header-center">
+            <h1>Statistik Penduduk Kabupaten Kudus</h1>
+            <p>Data Jumlah Penduduk Menurut Jenis Kelamin Kabupaten Kudus Tahun 2024</p>
+        </div>
+        <div class="header-right">
+            <img src="UGM.png" alt="Logo UGM">
+        </div>
+    </header>
+
+    <table border="1">
+        <tr><th rowspan="2">Kecamatan</th><th colspan="3">Jumlah Penduduk</th></tr>
+        <tr><th>Laki-laki</th><th>Perempuan</th><th>Total</th></tr>
+        <tr><td>Kaliwungu</td><td>54663</td><td>54101</td><td>108764</td></tr>
+        <tr><td>Kota Kudus</td><td>43627</td><td>46148</td><td>89775</td></tr>
+        <tr><td>Jati</td><td>56297</td><td>56746</td><td>113043</td></tr>
+        <tr><td>Undaan</td><td>40081</td><td>39910</td><td>79991</td></tr>
+        <tr><td>Mejobo</td><td>40643</td><td>40252</td><td>80895</td></tr>
+        <tr><td>Jekulo</td><td>56448</td><td>56684</td><td>113132</td></tr>
+        <tr><td>Bae</td><td>38564</td><td>38751</td><td>77315</td></tr>
+        <tr><td>Gebog</td><td>54503</td><td>54496</td><td>108999</td></tr>
+        <tr><td>Dawe</td><td>55629</td><td>55779</td><td>111408</td></tr>
+    </table>
+
+    <div class="chart-container">
+        <canvas id="chartGender"></canvas>
+    </div>
+
+    <center>
+        <button onclick="showPage('mapPage')">Kembali ke Peta</button>
+    </center>
+
+    <footer>
+        Sumber Data: BPS Kabupaten Kudus | Bintang Dzakwan
+    </footer>
+</div>
+
+</body>
+</html>
